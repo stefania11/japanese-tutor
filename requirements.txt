@@ -1,5 +1,5 @@
-pipecat>=0.0.60
-python-dotenv
-loguru
-Pillow
-aiohttp
+aiohttp==3.9.1
+python-dotenv==1.0.0
+loguru==0.7.2
+Pillow==10.1.0
+gunicorn==21.2.0
