@@ -142,31 +142,6 @@ button:hover, .upload-button:hover {
     background-color: #1976d2;
 }
 
-.voice-button {
-    background-color: #9c27b0;
-}
-
-.voice-button:hover {
-    background-color: #7b1fa2;
-}
-
-.voice-button.recording {
-    background-color: #f44336;
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.5;
-    }
-    100% {
-        opacity: 1;
-    }
-}
-
 .instructions {
     background-color: #fff8e1;
     padding: 15px;

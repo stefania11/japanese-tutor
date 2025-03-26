@@ -22,9 +22,6 @@
                     <textarea id="message-input" placeholder="Type your message here..."></textarea>
                     <div class="button-container">
                         <button id="send-button">Send</button>
-                        <button id="voice-button" class="voice-button">
-                            <span>Voice Input</span>
-                        </button>
                         <label for="image-upload" class="upload-button">
                             <span>Upload Image</span>
                             <input type="file" id="image-upload" accept="image/*" style="display: none;">
@@ -34,7 +31,15 @@
             </div>
         </div>
         
-        <!-- Instructions removed as requested by user -->
+        <div class="instructions">
+            <h3>How to use:</h3>
+            <ul>
+                <li>Type a message in Japanese or English</li>
+                <li>Upload an image with Japanese text to translate</li>
+                <li>Upload an image of objects to learn vocabulary</li>
+                <li>Combine text questions with images</li>
+            </ul>
+        </div>
     </div>
     
     <script src="/static/script.js"></script>

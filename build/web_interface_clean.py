@@ -14,7 +14,6 @@ from aiohttp import web
 from dotenv import load_dotenv
 from loguru import logger
 from PIL import Image
-from cors_middleware import cors_middleware
 
 load_dotenv(override=True)
 
@@ -40,7 +39,7 @@ class JapaneseTutorWeb:
     
     def __init__(self):
         """Initialize the web interface."""
-        self.app = web.Application(middlewares=[cors_middleware])
+        self.app = web.Application()
         self.setup_routes()
         self.conversation_history = []
         
@@ -131,7 +130,7 @@ class JapaneseTutorWeb:
                             }
                         }
                         
-                        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key={GEMINI_API_KEY}"
+                        url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=" + os.getenv("GEMINI_API", "")
                         
                         async with session.post(url, headers=headers, json=payload) as response:
                             if response.status != 200:
