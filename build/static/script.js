@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentImageData = null;
     let isRecording = false;
     let recognition = null;
+    let synth = window.speechSynthesis;
     
     try {
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -37,6 +38,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 isRecording = false;
                 voiceButton.classList.remove('recording');
                 voiceButton.innerHTML = '<span>Voice Input</span>';
+                
+                if (messageInput.value.trim()) {
+                    sendMessage();
+                }
             };
             
             recognition.onerror = function(event) {
@@ -54,7 +59,9 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('Error initializing speech recognition:', e);
     }
     
-    addAssistantMessage("こんにちは！ Konnichiwa! I'm your Japanese tutor. How can I help you today?");
+    const welcomeMessage = "こんにちは！ Konnichiwa! I'm your Japanese tutor. How can I help you today?";
+    addAssistantMessage(welcomeMessage);
+    speakText(welcomeMessage);
     
     sendButton.addEventListener('click', sendMessage);
     messageInput.addEventListener('keydown', function(e) {
@@ -84,6 +91,28 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.addEventListener('paste', handlePaste);
     
+    function speakText(text) {
+        if (synth.speaking) {
+            synth.cancel();
+        }
+        
+        const cleanText = text.replace(/\*\*/g, '').replace(/\*/g, '').replace(/`/g, '');
+        
+        let speechText = cleanText;
+        
+        speechText = speechText.replace(/\([^)]+\)/g, '');
+        
+        const utterance = new SpeechSynthesisUtterance(speechText);
+        
+        if (/[\u3000-\u303F\u3040-\u309F\u30A0-\u30FF\uFF00-\uFFEF\u4E00-\u9FAF]/.test(speechText)) {
+            utterance.lang = 'ja-JP';
+        } else {
+            utterance.lang = 'en-US';
+        }
+        
+        synth.speak(utterance);
+    }
+    
     async function sendMessage() {
         const message = messageInput.value.trim();
         
@@ -101,9 +130,14 @@ document.addEventListener('DOMContentLoaded', function() {
                                   message.toLowerCase().includes('see') ||
                                   message.toLowerCase().includes('what is this');
                                   
+            const imageDataToSend = currentImageData;
+            
+            const previewWasVisible = !!currentImageData;
+            clearImagePreview();
+            
             const useFallback = true; // Set to true to use fallback responses
             
-            if (currentImageData && useFallback) {
+            if (imageDataToSend && useFallback) {
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 
                 let response;
@@ -119,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 loadingElement.remove();
                 addAssistantMessage(response);
-                clearImagePreview();
+                speakText(response);
                 return;
             }
             
@@ -149,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 loadingElement.remove();
                 addAssistantMessage(response);
-                clearImagePreview();
+                speakText(response);
                 return;
             }
             
@@ -157,8 +191,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 message: message
             };
             
-            if (currentImageData) {
-                requestData.image_data = currentImageData;
+            if (imageDataToSend) {
+                requestData.image_data = imageDataToSend;
             }
             
             const hostname = window.location.hostname;
@@ -168,6 +202,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const apiUrl = `${protocol}//${hostname}${port}/api/chat`;
             
             console.log('Sending request to:', apiUrl);
+            console.log('Image data included:', !!imageDataToSend);
             
             const response = await fetch(apiUrl, {
                 method: 'POST',
@@ -188,9 +223,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 addErrorMessage(data.error);
             } else {
                 addAssistantMessage(data.response);
+                speakText(data.response);
             }
-            
-            clearImagePreview();
             
         } catch (error) {
             loadingElement.remove();
