@@ -23,7 +23,7 @@ from pipecat.frames.frames import (
     TranscriptionFrame,
     TranscriptionMessage,
     TranscriptionUpdateFrame,
-    ImageFrame,
+    ImageRawFrame,
 )
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.runner import PipelineRunner
@@ -74,7 +74,7 @@ class ImageProcessor(FrameProcessor):
         """
         await super().process_frame(frame, direction)
         
-        if isinstance(frame, ImageFrame):
+        if isinstance(frame, ImageRawFrame):
             logger.info("Processing image frame")
             image_data = frame.image_data
             if isinstance(image_data, bytes):
@@ -288,7 +288,7 @@ class MultimodalJapaneseTutor:
                 if message.get("type") == "image_upload":
                     image_data = message.get("image_data")
                     if image_data:
-                        await self.task.queue_frame(ImageFrame(image_data))
+                        await self.task.queue_frame(ImageRawFrame(image_data))
             
             self.runner = PipelineRunner()
             logger.info("Japanese tutor setup complete")
