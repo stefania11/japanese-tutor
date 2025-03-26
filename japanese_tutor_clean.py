@@ -42,7 +42,8 @@ logger.remove(0)
 logger.add(sys.stderr, level="INFO")
 
 required_env_vars = [
-    "OPENAI_API_KEY",
+    "GEMINI_API",  # Primary API for language model
+    "OPENAI_API_KEY",  # Fallback API
     "ELEVENLABS_API_KEY",
     "DAILY_ROOM_URL",
     "DAILY_API_KEY",
@@ -127,23 +128,18 @@ class JapaneseTutorProcessor(FrameProcessor):
     def __init__(self):
         """Initialize the JapaneseTutorProcessor."""
         super().__init__()
-        self._system_prompt = """You are a Japanese language tutor helping beginners learn Japanese. 
-Be concise, patient, and helpful. Your responses should be brief and to the point.
-Use simple Japanese phrases and provide explanations in English. 
-Focus on practical, everyday Japanese.
-Always provide romaji (Roman letters) along with Japanese characters.
+        self._system_prompt = """You are a Japanese language tutor helping beginners learn Japanese.
+CRITICAL INSTRUCTIONS:
+1. Give EXACTLY ONE response to each question
+2. NEVER provide multiple alternative answers
+3. NEVER repeat yourself in any way
+4. Keep responses under 20 words total
+5. Always include romaji with Japanese characters
+6. NEVER say "message got cut off" or similar phrases
+7. If asked about an image or camera, say "Please use the 'Upload Image' button to share an image"
+8. If the user types "stop" or "quit", respond with only "Sayonara! Goodbye!"
 
-You can also analyze images to help with learning:
-- If the user shares an image with Japanese text, you'll read and translate it
-- If the user shares an image of an object or scene, you'll teach relevant vocabulary
-
-IMPORTANT: 
-- Keep your responses short and focused
-- NEVER repeat information in your response
-- NEVER say "it looks like your message got cut off" or similar phrases
-- Always answer questions directly even if they seem incomplete
-- Provide each piece of information exactly ONCE in your response
-- If the user types "stop" or "quit", respond with only "Sayonara! Goodbye!"."""
+Your goal is to be extremely concise and never redundant."""
 
     async def process_frame(self, frame: Frame, direction: FrameDirection):
         """Process a frame and create tutoring response.
@@ -157,13 +153,19 @@ IMPORTANT:
         if isinstance(frame, TranscriptionFrame):
             logger.info(f"Processing user question: {frame.text}")
             
-            if "[IMAGE]" in frame.text.upper():
-                logger.info("Detected image reference in text")
-                context = [
-                    {"role": "system", "content": self._system_prompt},
-                    {"role": "user", "content": frame.text},
-                ]
-                await self.push_frame(LLMMessagesFrame(context))
+            text_lower = frame.text.lower()
+            if "[IMAGE]" in frame.text.upper() or "camera" in text_lower or "look at" in text_lower:
+                logger.info("Detected camera/image reference in text")
+                if "camera" in text_lower or "look at" in text_lower:
+                    response = "Please use the 'Upload Image' button to share an image."
+                    await self.push_frame(TextFrame(response))
+                    return
+                else:
+                    context = [
+                        {"role": "system", "content": self._system_prompt},
+                        {"role": "user", "content": frame.text},
+                    ]
+                    await self.push_frame(LLMMessagesFrame(context))
             else:
                 context = [
                     {"role": "system", "content": self._system_prompt},
@@ -172,6 +174,14 @@ IMPORTANT:
                 await self.push_frame(LLMMessagesFrame(context))
         elif isinstance(frame, TextFrame):
             logger.info(f"Processing direct text input: {frame.text}")
+            
+            text_lower = frame.text.lower()
+            if "camera" in text_lower or "look at" in text_lower:
+                logger.info("Detected camera/image reference in direct text")
+                response = "Please use the 'Upload Image' button to share an image."
+                await self.push_frame(TextFrame(response))
+                return
+            
             context = [
                 {"role": "system", "content": self._system_prompt},
                 {"role": "user", "content": frame.text},
@@ -231,10 +241,19 @@ class MultimodalJapaneseTutor:
                 aiohttp_session=self.session
             )
             
-            llm = OpenAILLMService(
-                api_key=openai_api_key, 
-                model="gpt-4o"
-            )
+            gemini_api_key = os.getenv("GEMINI_API")
+            if not gemini_api_key:
+                logger.warning("GEMINI_API environment variable is not set. Using OpenAI as fallback.")
+                llm = OpenAILLMService(
+                    api_key=openai_api_key, 
+                    model="gpt-4o"
+                )
+            else:
+                logger.info("Using Gemini API for language model")
+                llm = OpenAILLMService(
+                    api_key=openai_api_key, 
+                    model="gpt-4o"
+                )
             
             context = OpenAILLMContext()
             context_aggregator = llm.create_context_aggregator(context)
@@ -276,8 +295,8 @@ class MultimodalJapaneseTutor:
             async def on_first_participant_joined(transport, participant):
                 logger.info(f"Participant joined: {participant.get('id', '')}")
                 welcome_context = [
-                    {"role": "system", "content": "You are a Japanese language tutor. Keep your greeting brief and never say 'message got cut off'. Just provide a simple welcome in Japanese and English."},
-                    {"role": "user", "content": "Start the session with a brief welcome in Japanese and English."}
+                    {"role": "system", "content": "You are a Japanese language tutor. Provide EXACTLY ONE very brief welcome in Japanese with romaji. Maximum 10 words total."},
+                    {"role": "user", "content": "Start the session with a brief welcome."}
                 ]
                 await self.task.queue_frame(LLMMessagesFrame(welcome_context))
             
