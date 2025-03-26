@@ -137,9 +137,13 @@ You can also analyze images to help with learning:
 - If the user shares an image with Japanese text, you'll read and translate it
 - If the user shares an image of an object or scene, you'll teach relevant vocabulary
 
-IMPORTANT: Keep your responses short and focused. Do not repeat yourself.
-DO NOT say "it looks like your message got cut off" - just answer the question directly.
-If the user types "stop" or "quit", respond with only "Sayonara! Goodbye!"."""
+IMPORTANT: 
+- Keep your responses short and focused
+- NEVER repeat information in your response
+- NEVER say "it looks like your message got cut off" or similar phrases
+- Always answer questions directly even if they seem incomplete
+- Provide each piece of information exactly ONCE in your response
+- If the user types "stop" or "quit", respond with only "Sayonara! Goodbye!"."""
 
     async def process_frame(self, frame: Frame, direction: FrameDirection):
         """Process a frame and create tutoring response.
@@ -272,7 +276,7 @@ class MultimodalJapaneseTutor:
             async def on_first_participant_joined(transport, participant):
                 logger.info(f"Participant joined: {participant.get('id', '')}")
                 welcome_context = [
-                    {"role": "system", "content": "You are a Japanese language tutor keep greeting brief."},
+                    {"role": "system", "content": "You are a Japanese language tutor. Keep your greeting brief and never say 'message got cut off'. Just provide a simple welcome in Japanese and English."},
                     {"role": "user", "content": "Start the session with a brief welcome in Japanese and English."}
                 ]
                 await self.task.queue_frame(LLMMessagesFrame(welcome_context))
