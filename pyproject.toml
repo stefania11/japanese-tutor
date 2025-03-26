@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "japanese-tutor"
+version = "0.1.0"
+description = "A multimodal Japanese language tutor built with Pipecat"
+authors = ["Devin AI <devin-ai-integration[bot]@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+fastapi = "^0.104.1"
+uvicorn = "^0.23.2"
+pydantic = "^2.4.2"
+python-dotenv = "^1.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
