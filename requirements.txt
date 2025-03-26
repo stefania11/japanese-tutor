@@ -1,0 +1,5 @@
+pipecat>=0.0.60
+python-dotenv
+loguru
+Pillow
+aiohttp
