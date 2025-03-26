@@ -118,9 +118,15 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (!message && !currentImageData) return;
         
-        addUserMessage(message, currentImageData);
+        const imageDataToSend = currentImageData;
+        
+        addUserMessage(message, imageDataToSend);
         
         messageInput.value = '';
+        
+        clearImagePreview();
+        
+        currentImageData = null;
         
         const loadingElement = addLoadingIndicator();
         
@@ -129,13 +135,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                   message.toLowerCase().includes('look') || 
                                   message.toLowerCase().includes('see') ||
                                   message.toLowerCase().includes('what is this');
-                                  
-            const imageDataToSend = currentImageData;
             
-            const previewWasVisible = !!currentImageData;
-            clearImagePreview();
-            
-            const useFallback = true; // Set to true to use fallback responses
+            const useFallback = true; 
             
             if (imageDataToSend && useFallback) {
                 await new Promise(resolve => setTimeout(resolve, 1000));
@@ -192,7 +193,17 @@ document.addEventListener('DOMContentLoaded', function() {
             };
             
             if (imageDataToSend) {
-                requestData.image_data = imageDataToSend;
+                let base64Data = imageDataToSend;
+                
+                if (base64Data.includes(',')) {
+                    base64Data = imageDataToSend.split(',')[1];
+                } else if (base64Data.startsWith('data:')) {
+                    base64Data = base64Data.replace(/^data:image\/(png|jpeg|jpg);base64,/, '');
+                }
+                
+                requestData.image_data = `data:image/jpeg;base64,${base64Data}`;
+                
+                console.log('Image data:', requestData.image_data.substring(0, 50) + '...');
             }
             
             const hostname = window.location.hostname;
@@ -261,6 +272,11 @@ document.addEventListener('DOMContentLoaded', function() {
             currentImageData = e.target.result;
             
             displayImagePreview(currentImageData);
+            
+            if (messageInput.value.trim() === '') {
+                messageInput.value = 'What is in this image?';
+            }
+            
             console.log('Image loaded successfully:', currentImageData ? currentImageData.substring(0, 50) + '...' : 'null');
         };
         
@@ -279,7 +295,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function clearImagePreview() {
         imagePreview.innerHTML = '';
-        currentImageData = null;
     }
     
     function addUserMessage(text, imageData = null) {
@@ -294,10 +309,30 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if (imageData) {
+            const imgContainer = document.createElement('div');
+            imgContainer.className = 'image-container';
+            
             const img = document.createElement('img');
-            img.src = imageData;
+            
+            let imgSrc = imageData;
+            if (typeof imageData === 'string') {
+                if (!imageData.startsWith('data:')) {
+                    imgSrc = `data:image/jpeg;base64,${imageData}`;
+                }
+            }
+            
+            img.src = imgSrc;
             img.alt = 'User Image';
-            messageDiv.appendChild(img);
+            img.className = 'chat-image';
+            img.style.maxWidth = '200px';
+            img.style.maxHeight = '200px';
+            img.style.borderRadius = '8px';
+            img.style.marginTop = '8px';
+            
+            imgContainer.appendChild(img);
+            messageDiv.appendChild(imgContainer);
+            
+            console.log('Image added to chat:', imgSrc.substring(0, 50) + '...');
         }
         
         chatMessages.appendChild(messageDiv);
