@@ -11,39 +11,47 @@ document.addEventListener('DOMContentLoaded', function() {
     let isRecording = false;
     let recognition = null;
     
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.continuous = false;
-        recognition.interimResults = true;
-        recognition.lang = 'en-US'; // Default language
-        
-        recognition.onstart = function() {
-            isRecording = true;
-            voiceButton.classList.add('recording');
-            voiceButton.innerHTML = '<span>Listening...</span>';
-        };
-        
-        recognition.onresult = function(event) {
-            const transcript = Array.from(event.results)
-                .map(result => result[0])
-                .map(result => result.transcript)
-                .join('');
+    try {
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US'; // Default language
+            
+            recognition.onstart = function() {
+                isRecording = true;
+                voiceButton.classList.add('recording');
+                voiceButton.innerHTML = '<span>Listening...</span>';
+            };
+            
+            recognition.onresult = function(event) {
+                const transcript = Array.from(event.results)
+                    .map(result => result[0])
+                    .map(result => result.transcript)
+                    .join('');
+                    
+                messageInput.value = transcript;
+            };
+            
+            recognition.onend = function() {
+                isRecording = false;
+                voiceButton.classList.remove('recording');
+                voiceButton.innerHTML = '<span>Voice Input</span>';
+            };
+            
+            recognition.onerror = function(event) {
+                console.error('Speech recognition error', event.error);
+                isRecording = false;
+                voiceButton.classList.remove('recording');
+                voiceButton.innerHTML = '<span>Voice Input</span>';
                 
-            messageInput.value = transcript;
-        };
-        
-        recognition.onend = function() {
-            isRecording = false;
-            voiceButton.classList.remove('recording');
-            voiceButton.innerHTML = '<span>Voice Input</span>';
-        };
-        
-        recognition.onerror = function(event) {
-            console.error('Speech recognition error', event.error);
-            isRecording = false;
-            voiceButton.classList.remove('recording');
-            voiceButton.innerHTML = '<span>Voice Input</span>';
-        };
+                if (event.error === 'not-allowed') {
+                    addErrorMessage('Microphone access denied. Please enable microphone permissions in your browser settings.');
+                }
+            };
+        }
+    } catch (e) {
+        console.error('Error initializing speech recognition:', e);
     }
     
     addAssistantMessage("こんにちは！ Konnichiwa! I'm your Japanese tutor. How can I help you today?");
@@ -219,7 +227,7 @@ document.addEventListener('DOMContentLoaded', function() {
             currentImageData = e.target.result;
             
             displayImagePreview(currentImageData);
-            console.log('Image loaded successfully:', currentImageData.substring(0, 50) + '...');
+            console.log('Image loaded successfully:', currentImageData ? currentImageData.substring(0, 50) + '...' : 'null');
         };
         
         reader.readAsDataURL(file);
