@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Japanese Tutor</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Japanese Language Tutor</h1>
+            <p>Learn Japanese with text and image interactions</p>
+        </header>
+        
+        <div class="chat-container">
+            <div id="chat-messages" class="chat-messages"></div>
+            
+            <div class="input-container">
+                <div id="image-preview" class="image-preview"></div>
+                <div class="message-input-container">
+                    <textarea id="message-input" placeholder="Type your message here..."></textarea>
+                    <div class="button-container">
+                        <button id="send-button">Send</button>
+                        <label for="image-upload" class="upload-button">
+                            <span>Upload Image</span>
+                            <input type="file" id="image-upload" accept="image/*" style="display: none;">
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>How to use:</h3>
+            <ul>
+                <li>Type a message in Japanese or English</li>
+                <li>Upload an image with Japanese text to translate</li>
+                <li>Upload an image of objects to learn vocabulary</li>
+                <li>Combine text questions with images</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script src="/static/script.js"></script>
+</body>
+</html>
