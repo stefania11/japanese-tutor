@@ -1,0 +1,25 @@
+# Core dependencies
+pipecat-ai>=0.0.60
+python-dotenv>=1.0.0
+loguru>=0.7.0
+
+# API clients
+aiohttp>=3.8.5
+requests>=2.31.0
+
+# Audio processing
+silero-vad>=1.0.0
+
+# Voice and speech services
+elevenlabs>=0.2.27
+openai>=1.12.0
+
+# For Daily WebRTC transport
+websockets>=11.0.3
+
+# Image generation (optional)
+fal-client>=0.1.0
+
+# Utilities
+Pillow>=10.0.0
+numpy>=1.24.0
